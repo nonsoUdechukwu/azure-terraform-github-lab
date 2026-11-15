@@ -1,0 +1,21 @@
+name: HCP plan-only change detection
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 7 * * 1-5"
+permissions:
+  contents: read
+concurrency:
+  group: hcp-plan-only-dev
+  cancel-in-progress: false
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Queue and inspect a plan-only HCP run
+        env:
+          HCP_TERRAFORM_TOKEN: ${{ secrets.HCP_TERRAFORM_TOKEN }}
+          HCP_WORKSPACE_ID: ${{ vars.HCP_WORKSPACE_ID }}
+        run: python3 scripts/hcp_change_detection.py

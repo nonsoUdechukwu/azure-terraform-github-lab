@@ -1,0 +1,16 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+!examples/live/environments/dev/terraform.tfvars
+*.pem
+*.key
+.env
+.DS_Store
+__pycache__/
+examples/*-module/.terraform.lock.hcl
