@@ -58,6 +58,9 @@ directly.** They are reference snapshots, not your three learner repositories.
 Lessons say exactly where each file goes and when to commit, push and tag.
 Commands use a POSIX shell (macOS, Linux or WSL) unless stated otherwise.
 
+For a separate beginner data-engineering course, see the
+[Azure Databricks retail lab](data-engineering-lab/README.md).
+
 | Directory | Purpose |
 |---|---|
 | [`examples/resource-group-module`](examples/resource-group-module) | Resource-group v1.0.0 source and mocked tests |
