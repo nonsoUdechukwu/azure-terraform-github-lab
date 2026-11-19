@@ -61,12 +61,18 @@ Commands use a POSIX shell (macOS, Linux or WSL) unless stated otherwise.
 For a separate beginner data-engineering course, see the
 [Azure Databricks retail lab](data-engineering-lab/README.md).
 
+For an optional standalone Azure DevOps pipeline exercise, see the
+[credential artifact lab](examples/azure-devops-credential-lab/README.md).
+Its mock baseline needs no Azure access; the fixed pipeline requires explicit
+lab setup and uses its own pinned Terraform and AzureRM versions.
+
 | Directory | Purpose |
 |---|---|
 | [`examples/resource-group-module`](examples/resource-group-module) | Resource-group v1.0.0 source and mocked tests |
 | [`examples/network-module`](examples/network-module) | Network v1.0.0 source and mocked tests |
 | [`examples/network-module-v1.1.0`](examples/network-module-v1.1.0) | Only the added v1.1.0 output and its test |
 | [`examples/live/environments/dev`](examples/live/environments/dev) | Live configuration; replace `YOUR_GITHUB_USER` |
+| [`examples/azure-devops-credential-lab`](examples/azure-devops-credential-lab) | Standalone mock baseline and sanitized-summary Azure DevOps pipelines |
 | [`templates`](templates) | Copyable learner CI and optional scheduler; not enabled here |
 | [`scripts`](scripts) | Offline course validation, no deployments |
 

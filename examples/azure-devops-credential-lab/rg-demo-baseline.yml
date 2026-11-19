@@ -1,0 +1,34 @@
+trigger: none
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: none
+
+  - bash: |
+      set -euo pipefail
+      mkdir -p "$REVIEW_DIR"
+      cat > "$REVIEW_DIR/legacy-init.example.yml" <<'YAML'
+      # For comparison only. This task is not run by the demo.
+      - task: TerraformTaskV4@4
+        inputs:
+          provider: azurerm
+          command: init
+          commandOptions: '-backend-config=use_azuread_auth=true'
+      YAML
+      cat > "$REVIEW_DIR/simulated-legacy-backend.json" <<'JSON'
+      {
+        "simulation_only": true,
+        "illustrative_backend_metadata": {
+          "client_secret": "DEMO_CANARY_NOT_AN_AZURE_CREDENTIAL"
+        }
+      }
+      JSON
+    displayName: Show the old setting and a simulated secret
+    env:
+      REVIEW_DIR: $(Build.ArtifactStagingDirectory)/baseline
+
+  - publish: $(Build.ArtifactStagingDirectory)/baseline
+    artifact: rg-demo-baseline-review

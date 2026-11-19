@@ -1,0 +1,84 @@
+trigger: none
+pr: none
+
+parameters:
+  - name: apply
+    type: boolean
+    default: false
+
+variables:
+  serviceConnection: REPLACE_WITH_LAB_SERVICE_CONNECTION
+  stateResourceGroup: REPLACE_WITH_EXISTING_STATE_RESOURCE_GROUP
+  stateStorageAccount: REPLACE_WITH_EXISTING_STATE_STORAGE_ACCOUNT
+  stateContainer: REPLACE_WITH_EXISTING_PRIVATE_STATE_CONTAINER
+  tfDir: $(Build.SourcesDirectory)/examples/azure-devops-credential-lab
+  planFile: $(Agent.TempDirectory)/rg-demo.tfplan
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - checkout: self
+    clean: true
+
+  - task: TerraformInstaller@1
+    inputs:
+      terraformVersion: '1.13.5'
+
+  - task: TerraformTaskV4@4
+    displayName: Initialize Terraform with runtime credentials
+    inputs:
+      provider: azurerm
+      command: init
+      workingDirectory: $(tfDir)
+      backendServiceArm: $(serviceConnection)
+      backendAzureRmResourceGroupName: $(stateResourceGroup)
+      backendAzureRmStorageAccountName: $(stateStorageAccount)
+      backendAzureRmContainerName: $(stateContainer)
+      backendAzureRmKey: rg-demo-fixed.tfstate
+      backendAzureRmUseEntraIdForAuthentication: true
+      backendAzureRmUseEnvironmentVariablesForAuthentication: true
+      commandOptions: '-input=false'
+
+  - task: TerraformTaskV4@4
+    displayName: Plan the resource group
+    inputs:
+      provider: azurerm
+      command: plan
+      workingDirectory: $(tfDir)
+      environmentServiceNameAzureRM: $(serviceConnection)
+      commandOptions: '-input=false -no-color -out="$(planFile)"'
+    env:
+      TF_VAR_resource_group_name: rg-tf-auth-demo-fixed
+
+  - bash: |
+      set -euo pipefail
+      mkdir -p "$REVIEW_DIR"
+      terraform show -json "$PLAN_FILE" | jq '{
+        resource_changes: [.resource_changes[]? |
+          {address, actions: .change.actions}]
+      }' > "$REVIEW_DIR/plan-summary.json"
+    displayName: Create a plan summary without resource values
+    workingDirectory: $(tfDir)
+    env:
+      PLAN_FILE: $(planFile)
+      REVIEW_DIR: $(Build.ArtifactStagingDirectory)/review
+
+  - publish: $(Build.ArtifactStagingDirectory)/review/plan-summary.json
+    artifact: rg-demo-fixed-review
+
+  - ${{ if eq(parameters.apply, true) }}:
+      - task: TerraformTaskV4@4
+        displayName: Apply the saved plan on the same agent
+        inputs:
+          provider: azurerm
+          command: apply
+          workingDirectory: $(tfDir)
+          environmentServiceNameAzureRM: $(serviceConnection)
+          commandOptions: '-input=false -no-color "$(planFile)"'
+
+  - bash: rm -f -- "$PLAN_FILE"
+    displayName: Delete the local binary plan
+    condition: always()
+    env:
+      PLAN_FILE: $(planFile)
